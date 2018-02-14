@@ -21,7 +21,7 @@ exports.getSourceFile = function(request, multiCb) {
 function readFile(request, multiCb) {
   fs.readFile(request.args.file, {encoding: 'utf8'}, function(error, content) {
     if (error) {
-      logger.warn(
+      logger.debug(
         'Failed to retrieve source file for user request: %s.',
         request.args.file,
         {error: error}
