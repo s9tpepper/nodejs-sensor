@@ -9,27 +9,24 @@ var maxProfilingDurationMillis = 1000 * 60 * 10;
 var profilingCallback;
 var profilingTimeoutHandle;
 
-
 exports.init = function() {
   try {
-    profiler = require('v8-profiler');
+    profiler = require('v8-profiler-node8');
   } catch (error) {
     logger.info(
-      'Could not load v8-profiler. You will not be able to gather CPU profiles via ' +
-      'Instana for this application. This typically occurs when native addons could not be ' +
-      'installed during module installation (npm install). See the instructions to learn more ' +
-      'about the requirements of the sensor: ' +
-      'https://github.com/instana/nodejs-sensor/blob/master/README.md'
+      'Could not load v8-profiler-node8. You will not be able to gather CPU profiles via ' +
+        'Instana for this application. This typically occurs when native addons could not be ' +
+        'installed during module installation (npm install). See the instructions to learn more ' +
+        'about the requirements of the sensor: ' +
+        'https://github.com/instana/nodejs-sensor/blob/master/README.md'
     );
-    return;
   }
 };
-
 
 exports.startProfiling = function(request, multiCb) {
   if (!profiler) {
     multiCb({
-      error: 'v8-profiler was not properly installed. Cannot gather CPU profile.'
+      error: 'v8-profiler-node8 was not properly installed. Cannot gather CPU profile.'
     });
     return;
   }
@@ -52,7 +49,6 @@ exports.startProfiling = function(request, multiCb) {
     data: 'Profiling successfully started for ' + duration + 'ms.'
   });
 };
-
 
 exports.stopProfiling = function(request, multiCb) {
   if (!profilingTimeoutHandle) {
@@ -80,7 +76,6 @@ exports.stopProfiling = function(request, multiCb) {
   profilingCallback = null;
 };
 
-
 function onStopProfiling() {
   profilingTimeoutHandle = null;
 
@@ -88,15 +83,13 @@ function onStopProfiling() {
   var profileWithTimingInformation = exports.toTreeWithTiming(profile, samplingIntervalMicros);
   profile.delete();
 
-  profilingCallback({data: profileWithTimingInformation});
+  profilingCallback({ data: profileWithTimingInformation });
   profilingCallback = null;
 }
-
 
 exports.toTreeWithTiming = function toTreeWithTiming(profile) {
   return processRawNode(profile.head);
 };
-
 
 function processRawNode(rawNode) {
   var node = {
@@ -123,7 +116,6 @@ function processRawNode(rawNode) {
 
   return node;
 }
-
 
 function getBailoutReason(rawNode) {
   var reason = rawNode.bailoutReason;

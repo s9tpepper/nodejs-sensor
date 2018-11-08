@@ -11,16 +11,17 @@ addons:
       - g++-4.8
 
 node_js:
-  - v0.12
   - v4
   - v5
   - v6
   - v7
   - v8
   - v9
+  - v10
 
 before_script:
   - sudo /etc/init.d/mysql stop
+  - sudo /etc/init.d/postgresql stop
   - docker-compose kill && docker-compose rm -f && docker-compose up -d
   - sleep 45
 
@@ -37,9 +38,13 @@ env:
     - REDIS=127.0.0.1:6379
     - MYSQL_HOST=127.0.0.1
     - MYSQL_PORT=3306
-    - MYSQL_USER=root
+    - MYSQL_USER=node
     - MYSQL_PW=nodepw
     - MYSQL_DB=nodedb
+    - POSTGRES_HOST=127.0.0.1
+    - POSTGRES_USER=node
+    - POSTGRES_PASSWORD=nodepw
+    - POSTGRES_DB=nodedb
     - CXX=g++-4.8
 
 notifications:

@@ -10,7 +10,6 @@ module.exports = function applyCompressionRoot(prev, next) {
   return result;
 };
 
-
 function applyCompression(prev, next) {
   if (prev === next) {
     return undefined;
@@ -32,12 +31,13 @@ function applyCompression(prev, next) {
   return undefined;
 }
 
-
 function applyCompressionToObject(prev, next) {
   var result = {};
   var addedProps = 0;
 
+  // eslint-disable-next-line no-restricted-syntax
   for (var nKey in next) {
+    // eslint-disable-next-line no-prototype-builtins
     if (next.hasOwnProperty(nKey)) {
       var nValue = next[nKey];
       var pValue = prev[nKey];
@@ -56,7 +56,6 @@ function applyCompressionToObject(prev, next) {
 
   return undefined;
 }
-
 
 function applyCompressionToArray(prev, next) {
   if (next.length !== prev.length) {

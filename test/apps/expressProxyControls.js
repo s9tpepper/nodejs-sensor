@@ -11,7 +11,7 @@ var utils = require('../utils');
 var config = require('../config');
 var agentPort = require('./agentStubControls').agentPort;
 var upstreamPort = require('./expressControls').appPort;
-var appPort = exports.appPort = 3212;
+var appPort = (exports.appPort = 3212);
 
 var expressProxyApp;
 
@@ -37,7 +37,6 @@ exports.registerTestHooks = function(opts) {
   });
 };
 
-
 function waitUntilServerIsUp() {
   return utils.retry(function() {
     return request({
@@ -50,11 +49,9 @@ function waitUntilServerIsUp() {
   });
 }
 
-
 exports.getPid = function() {
   return expressProxyApp.pid;
 };
-
 
 exports.sendRequest = function(opts) {
   opts.responseStatus = opts.responseStatus || 200;
@@ -71,11 +68,11 @@ exports.sendRequest = function(opts) {
     qs: {
       responseStatus: opts.responseStatus,
       delay: opts.delay,
-      url: opts.target
+      url: opts.target,
+      httpLib: opts.httpLib
     },
     headers: headers
-  })
-  .catch(errors.StatusCodeError, function(reason) {
+  }).catch(errors.StatusCodeError, function(reason) {
     // treat all status code errors as likely // allowed
     return reason;
   });

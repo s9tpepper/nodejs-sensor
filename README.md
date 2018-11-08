@@ -1,4 +1,4 @@
-# instana-nodejs-sensor &nbsp; [![Build Status](https://travis-ci.org/instana/nodejs-sensor.svg?branch=master)](https://travis-ci.org/instana/nodejs-sensor) [![Code Climate](https://codeclimate.com/github/instana/nodejs-sensor/badges/gpa.svg)](https://codeclimate.com/github/instana/nodejs-sensor) [![Dependency Status](https://david-dm.org/instana/nodejs-sensor/master.svg)](https://david-dm.org/instana/nodejs-sensor/master) [![devDependency Status](https://david-dm.org/instana/nodejs-sensor/master/dev-status.svg)](https://david-dm.org/instana/nodejs-sensor/master#info=devDependencies) [![OpenTracing Badge](https://img.shields.io/badge/OpenTracing-enabled-blue.svg)](http://opentracing.io)
+# instana-nodejs-sensor &nbsp; [![OpenTracing Badge](https://img.shields.io/badge/OpenTracing-enabled-blue.svg)](http://opentracing.io)
 
 Monitor your Node.js applications with Instana!
 
@@ -14,9 +14,8 @@ Monitor your Node.js applications with Instana!
 
 
 - [Installation and Usage](#installation-and-usage)
-- [Garbage Collection and Event Loop Information](#garbage-collection-and-event-loop-information)
+- [CPU Profiling, Garbage Collection and Event Loop Information](#cpu-profiling-garbage-collection-and-event-loop-information)
 - [OpenTracing](#opentracing)
-  - [Connecting OpenTracing spans to Instana spans](#connecting-opentracing-spans-to-instana-spans)
   - [Limitations](#limitations)
 - [FAQ](#faq)
   - [How can the Node.js sensor be disabled for (local) development?](#how-can-the-nodejs-sensor-be-disabled-for-local-development)
@@ -41,12 +40,18 @@ require('instana-nodejs-sensor')();
 // const express = require('redis');
 ```
 
-The code shown above initializes the sensor with default configuration options. Refer to the [CONFIGURATION.md](CONFIGURATION.md) file for a list of valid configuration options.
+The code shown above initializes the sensor with default configuration options. Refer to the [CONFIGURATION.md](CONFIGURATION.md) file for a list of valid configuration options, and in particular to the section [Agent Communication](https://github.com/instana/nodejs-sensor/blob/master/CONFIGURATION.md#agent-communication) for details about configuring connectivity between your monitored application and the Instana agent.
 
-## Garbage Collection and Event Loop Information
-Some information is not available to Node.js programs without the help of native addons. Specifically, the Instana Node.js sensor uses these addons to retrieve information about garbage collection and event loop activity. While the sensor works fine without these native addons (technically, they are marked as *optional dependencies*), we strongly recommend you to support native addon compilation.
+## CPU Profiling, Garbage Collection and Event Loop Information
+Some information is not available to Node.js programs without the help of native addons. Specifically, the Instana Node.js sensor uses these addons
+- to retrieve information about garbage collection,
+- to retrieve information about event loop activity,
+- for CPU profiling, and
+- to report uncaught exceptions (if enabled).
 
-Native addons are compiled automatically for your system and Node.js version when the Instana Node.js sensor dependency is installed (as part of the `npm install` step). In order for the compilation to work, the system needs to have tools like `make` and `g++` installed. These tools can often be installed via a bundle called `build-essential` or similar (depending on your package manager and registry). The following example shows how to do this for a typical Ubuntu setup.
+While the sensor works fine without these native addons (technically, they are marked as *optional dependencies*), we strongly recommend you to support native addon compilation.
+
+Native addons are compiled automatically for your system and Node.js version when the Instana Node.js sensor dependency is installed (as part of the `npm install` step). In order for the compilation to work, the system needs to have tools like `make`, `g++` and `python` installed. These tools can often be installed via a bundle called `build-essential` or similar (depending on your package manager and registry). The following example shows how to do this for a typical Ubuntu setup.
 
 ```
 apt-get install build-essential
@@ -55,6 +60,10 @@ yum groupinstall "Development Tools"
 ```
 
 **It is important that the installation of the dependencies is happening on the machine which will run the application.** This needs to be ensured, because otherwise native addons may be incompatible with the target machine's system architecture or the Node.js version in use. It is therefore a *bad practice* to `npm install` dependencies on a build server and to copy the application (including the dependencies) to the target machine.
+
+If you run your Node.js application dockerized, this aspect deserves extra attention. You might want to check the output of your Docker build for `node-gyp` errors (look for `gyp ERR!` and `node-pre-gyp ERR!`). If these are present, you should inspect and evaluate them. Some of them can be safely ignored. For example, some packages might try to download precompiled binaries, if this fails, they fall back to compilation via `node-gyp` that is, the download error can be ignored, if the compilation step worked. Other packages emit a lot of notes and warnings during compilation, which can also be ignored.
+
+If the installation of an optional dependency ends with `gyp ERR! not ok`, you might want to look into it. While Instana can unfortunately not provide support for fixing your particular `Dockerfile`, we do provide some [example Dockerfiles](https://github.com/instana/nodejs-sensor/tree/master/dockerfile-examples).
 
 ## OpenTracing
 This sensor automatically instruments widely used APIs to add tracing support, e.g. HTTP server / client of the Node.js core API. Sometimes you may find that this is not enough or you may already have invested in [OpenTracing](http://opentracing.io). The OpenTracing API is implemented by this Node.js sensor. This API can be used to provide insights into areas of your applications, e.g. custom libraries and frameworks, which would otherwise go unnoticed.
@@ -87,37 +96,6 @@ span.setTag(opentracing.Tags.ERROR, true);
 
 // finish the span and schedule it for transmission to instana
 span.finish();
-```
-
-### Connecting OpenTracing spans to Instana spans
-The Node.js sensor automatically instruments common HTTP and database APIs for your convenience. It would therefore be inefficient to do this again using OpenTracing. We recommend to use the OpenTracing APIs to add additional tracing insights on top of the auto-generated Instana traces. To support this, Instana offers an additional API to retrieve the currently existing OpenTracing SpanContext. This SpanContext can then be used to stitch traces together. The following code sample shows how this could be done for a simple [expressjs](https://expressjs.com/) app.
-
-```javascript
-const instana = require('instana-nodejs-sensor');
-instana({
-  tracing: {
-    enabled: true
-  }
-});
-
-const opentracing = require('opentracing');
-const express = require('express');
-
-opentracing.initGlobalTracer(instana.opentracing.createTracer());
-const tracer = opentracing.globalTracer();
-
-const app = express();
-
-app.get('/', (req, res) => {
-  var spanContext = instana.opentracing.getCurrentlyActiveInstanaSpanContext();
-  var authSpan = tracer.startSpan('auth', {childOf: spanContext});
-  authSpan.finish();
-  res.send('OK');
-});
-
-app.listen(3000, function() {
-  log('Listening on port 3000');
-});
 ```
 
 ### Limitations

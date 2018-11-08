@@ -10,7 +10,6 @@ exports.init = function(config) {
   stackTraceLength = config.tracing.stackTraceLength != null ? config.tracing.stackTraceLength : 10;
 };
 
-
 exports.getFrom = function getFrom() {
   return {
     e: String(pidStore.pid),
@@ -18,11 +17,15 @@ exports.getFrom = function getFrom() {
   };
 };
 
-
 exports.getStackTrace = function getStackTrace(referenceFunction) {
   return stackTrace.captureStackTrace(stackTraceLength, referenceFunction);
 };
 
+exports.generateRandomTraceId = function generateRandomTraceId() {
+  // TODO: as soon as all Instana tracers support 128bit trace IDs we can
+  // turn this into generating a longer String
+  return Math.floor(Math.random() * Number.MAX_SAFE_INTEGER).toString(16);
+};
 
 exports.generateRandomSpanId = function generateRandomSpanId() {
   return Math.floor(Math.random() * Number.MAX_SAFE_INTEGER).toString(16);

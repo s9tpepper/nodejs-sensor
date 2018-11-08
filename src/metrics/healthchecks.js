@@ -13,7 +13,7 @@ var timeoutHandle;
 exports.payloadPrefix = 'healthchecks';
 exports.currentPayload = {};
 
-requireHook.on('admin-plugin-healthcheck', function onAdminPluginHealthcheckLoaded(_adminPluginHealthcheck) {
+requireHook.onModuleLoad('admin-plugin-healthcheck', function onAdminPluginHealthcheckLoaded(_adminPluginHealthcheck) {
   adminPluginHealthcheck = _adminPluginHealthcheck;
 });
 
@@ -26,12 +26,15 @@ exports.activate = function(config) {
 };
 
 function gatherHealthcheckResults() {
-  adminPluginHealthcheck.getHealthCheckResult()
+  adminPluginHealthcheck
+    .getHealthCheckResult()
     .then(function onHealthcheckResults(adminHealthcheckResults) {
       var results = {};
       var previousResults = exports.currentPayload;
 
+      // eslint-disable-next-line no-restricted-syntax
       for (var key in adminHealthcheckResults) {
+        // eslint-disable-next-line no-prototype-builtins
         if (adminHealthcheckResults.hasOwnProperty(key)) {
           var result = adminHealthcheckResults[key];
           var checkHealthy = result.healthy ? healthy : unhealthy;
