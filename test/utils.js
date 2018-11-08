@@ -1,3 +1,5 @@
+/* eslint-disable consistent-return */
+
 'use strict';
 
 var Promise = require('bluebird');
@@ -43,8 +45,31 @@ exports.expectOneMatching = function expectOneMatching(arr, fn) {
   }
 
   if (error) {
-    throw new Error('Could not find an item which matches all the criteria. Got ' + arr.length +
-      ' items. Last error: ' + error.message + '. All Items:\n' + JSON.stringify(arr, 0, 2) +
-      '. Error stack trace: ' + error.stack);
+    throw new Error(
+      'Could not find an item which matches all the criteria. Got ' +
+        arr.length +
+        ' items. Last error: ' +
+        error.message +
+        '. All Items:\n' +
+        JSON.stringify(arr, 0, 2) +
+        '. Error stack trace: ' +
+        error.stack
+    );
   }
+};
+
+exports.getSpansByName = function getSpansByName(arr, name) {
+  var result = [];
+
+  if (!arr || arr.length === 0) {
+    return result;
+  }
+
+  for (var i = 0; i < arr.length; i++) {
+    var item = arr[i];
+    if (item.n === name) {
+      result.push(item);
+    }
+  }
+  return result;
 };

@@ -6,7 +6,8 @@ var logger = require('../logger').getLogger('agent/requestHandler');
 var agentConnection = require('../agentConnection');
 
 var actionMapping = {
-  'node.source': require('../actions/source').getSourceFile
+  'node.source': require('../actions/source').getSourceFile,
+  'node.getModuleAnalysis': require('../actions/getModuleAnalysis').getModuleAnalysis
 };
 
 if (semver.satisfies(process.versions.node, '>=4.0.0')) {
@@ -22,7 +23,7 @@ exports.handleRequests = function(requests) {
 function handleRequest(request) {
   var action = actionMapping[request.action];
   if (!action) {
-    sendResponse(request, {error: 'Don\'t know how to handle action: ' + action + '.'});
+    sendResponse(request, { error: "Don't know how to handle action: " + action + '.' });
     return;
   }
 
@@ -32,15 +33,16 @@ function handleRequest(request) {
 function sendResponse(request, response) {
   agentConnection.sendAgentResponseToAgent(request.messageId, response, function(error) {
     if (error) {
-      logger.warn(
-        'Failed to send agent response for action %s and message ID %s',
-        request.action,
-        request.messageId,
-        {error: error}
-      );
+      logger.warn('Failed to send agent response for action %s and message ID %s', request.action, request.messageId, {
+        error: error
+      });
     }
   });
 }
 
-exports.activate = function() {/* noop */};
-exports.deactivate = function() {/* noop */};
+exports.activate = function() {
+  /* noop */
+};
+exports.deactivate = function() {
+  /* noop */
+};

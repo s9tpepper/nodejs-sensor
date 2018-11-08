@@ -3,6 +3,7 @@
 var path = require('path');
 var fs = require('fs');
 
+var uncaughtExceptionHandler = require('../util/uncaughtExceptionHandler');
 var logger = require('../logger').getLogger('agentready');
 var requestHandler = require('../agent/requestHandler');
 var agentConnection = require('../agentConnection');
@@ -11,9 +12,11 @@ var tracing = require('../tracing');
 var clone = require('../clone');
 
 var metricsBaseDir = path.join(__dirname, '..', 'metrics');
-var modules = fs.readdirSync(metricsBaseDir)
+var modules = fs
+  .readdirSync(metricsBaseDir)
+  // ignore non-JS files
   .filter(function(moduleName) {
-    return moduleName.indexOf('_test') === -1;
+    return moduleName.indexOf('.js') === moduleName.length - 3;
   })
   .map(function(moduleName) {
     return require(path.join(metricsBaseDir, moduleName));
@@ -23,13 +26,13 @@ var config;
 var resendFullDataEveryXTransmissions = 300; /* about every 5 minutes */
 
 var transmissionsSinceLastFullDataEmit = 0;
-var previousTransmittedValue = undefined;
-
+var previousTransmittedValue;
 
 module.exports = exports = {
   enter: function(ctx) {
     transmissionsSinceLastFullDataEmit = 0;
 
+    uncaughtExceptionHandler.activate();
     enableAllSensors();
     tracing.activate();
     requestHandler.activate();
@@ -49,7 +52,7 @@ module.exports = exports = {
 
       agentConnection.sendDataToAgent(payload, function(error, requests) {
         if (error) {
-          logger.error('Error received while trying to send data to agent: %s', error.message);
+          logger.error('Error received while trying to send raw payload to agent: %s', error.message);
           ctx.transitionTo('unannounced');
           return;
         }
@@ -66,6 +69,7 @@ module.exports = exports = {
   },
 
   leave: function() {
+    uncaughtExceptionHandler.deactivate();
     disableAllSensors();
     tracing.deactivate();
     requestHandler.deactivate();
@@ -83,13 +87,11 @@ function enableAllSensors() {
   });
 }
 
-
 function disableAllSensors() {
   modules.forEach(function(mod) {
     mod.deactivate();
   });
 }
-
 
 function gatherDataFromModules() {
   var payload = {};

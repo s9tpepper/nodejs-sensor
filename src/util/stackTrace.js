@@ -22,8 +22,34 @@ exports.captureStackTrace = function captureStackTrace(length, referenceFunction
   return stack;
 };
 
+exports.getStackTraceAsJson = function getStackTraceAsJson(length, error) {
+  if (length <= 0) {
+    return [];
+  }
+
+  var originalLimit = Error.stackTraceLimit;
+  var originalPrepareStackTrace = Error.prepareStackTrace;
+  Error.stackTraceLimit = length;
+  Error.prepareStackTrace = attachJsonStackTrace;
+  // access error.stack to trigger attachJsonStackTrace to be called
+  error.stack;
+  Error.stackTraceLimit = originalLimit;
+  Error.prepareStackTrace = originalPrepareStackTrace;
+  var jsonStackTrace = error._jsonStackTrace;
+  delete error._jsonStackTrace;
+  return jsonStackTrace;
+};
 
 function jsonPrepareStackTrace(error, structuredStackTrace) {
+  return jsonifyStackTrace(structuredStackTrace);
+}
+
+function attachJsonStackTrace(error, structuredStackTrace) {
+  error._jsonStackTrace = jsonifyStackTrace(structuredStackTrace);
+  return defaultPrepareStackTrace(error, structuredStackTrace);
+}
+
+function jsonifyStackTrace(structuredStackTrace) {
   var len = structuredStackTrace.length;
   var result = new Array(len);
 
@@ -38,7 +64,6 @@ function jsonPrepareStackTrace(error, structuredStackTrace) {
 
   return result;
 }
-
 
 exports.buildFunctionIdentifier = function buildFunctionIdentifier(callSite) {
   if (callSite.isConstructor()) {
@@ -73,3 +98,8 @@ exports.buildFunctionIdentifier = function buildFunctionIdentifier(callSite) {
   label += ' [as ' + methodName + ']';
   return label;
 };
+
+function defaultPrepareStackTrace(error, frames) {
+  frames.push(error);
+  return frames.reverse().join('\n    at ');
+}

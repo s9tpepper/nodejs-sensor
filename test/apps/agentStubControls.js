@@ -10,14 +10,19 @@ var _ = require('lodash');
 var utils = require('../utils');
 var config = require('../config');
 
-var agentPort = exports.agentPort = 3210;
+var agentPort = (exports.agentPort = 3210);
 
 var agentStub;
 
-exports.registerTestHooks = function() {
+exports.registerTestHooks = function(opts) {
+  opts = opts || {};
+
   beforeEach(function() {
     var env = Object.create(process.env);
     env.AGENT_PORT = agentPort;
+    env.EXTRA_HEADERS = (opts.extraHeaders || []).join(',');
+    env.SECRETS_MATCHER = opts.secretsMatcher || 'contains-ignore-case';
+    env.SECRETS_LIST = (opts.secretsList || []).join(',');
 
     agentStub = spawn('node', [path.join(__dirname, 'agentStub.js')], {
       stdio: config.getAppStdio(),
@@ -32,7 +37,6 @@ exports.registerTestHooks = function() {
   });
 };
 
-
 function waitUntilServerIsUp() {
   return utils.retry(function() {
     return request({
@@ -42,7 +46,6 @@ function waitUntilServerIsUp() {
   });
 }
 
-
 exports.getDiscoveries = function() {
   return request({
     method: 'GET',
@@ -50,7 +53,6 @@ exports.getDiscoveries = function() {
     json: true
   });
 };
-
 
 exports.deleteDiscoveries = function() {
   return request({
@@ -60,7 +62,6 @@ exports.deleteDiscoveries = function() {
   });
 };
 
-
 exports.getRetrievedData = function() {
   return request({
     method: 'GET',
@@ -69,6 +70,13 @@ exports.getRetrievedData = function() {
   });
 };
 
+exports.getEvents = function() {
+  return request({
+    method: 'GET',
+    url: 'http://127.0.0.1:' + agentPort + '/retrievedEvents',
+    json: true
+  });
+};
 
 exports.clearRetrievedData = function() {
   return request({
@@ -78,36 +86,31 @@ exports.clearRetrievedData = function() {
   });
 };
 
-
 exports.getSpans = function() {
-  return exports.getRetrievedData()
-    .then(function(data) {
-      return data.traces.reduce(function(result, traceMessage) {
-        return result.concat(traceMessage.data);
-      }, []);
-    });
+  return exports.getRetrievedData().then(function(data) {
+    return data.traces.reduce(function(result, traceMessage) {
+      return result.concat(traceMessage.data);
+    }, []);
+  });
 };
-
 
 exports.getResponses = function() {
-  return exports.getRetrievedData()
-    .then(function(data) {
-      return data.responses;
-    });
+  return exports.getRetrievedData().then(function(data) {
+    return data.responses;
+  });
 };
 
-
 exports.getLastMetricValue = function(pid, _path) {
-  return exports.getRetrievedData()
-    .then(function(data) {
-      return getLastMetricValue(pid, data, _path);
-    });
+  return exports.getRetrievedData().then(function(data) {
+    return getLastMetricValue(pid, data, _path);
+  });
 };
 
 function getLastMetricValue(pid, data, _path) {
   for (var i = data.runtime.length - 1; i >= 0; i--) {
     var runtimeMessage = data.runtime[i];
     if (runtimeMessage.pid !== pid) {
+      // eslint-disable-next-line no-continue
       continue;
     }
 
@@ -120,23 +123,20 @@ function getLastMetricValue(pid, data, _path) {
   return undefined;
 }
 
-
 exports.waitUntilAppIsCompletelyInitialized = function(pid) {
   return utils.retry(function() {
-    return exports.getRetrievedData()
-      .then(function(data) {
-        for (var i = 0, len = data.runtime.length; i < len; i++) {
-          var d = data.runtime[i];
-          if (d.pid) {
-            return true;
-          }
+    return exports.getRetrievedData().then(function(data) {
+      for (var i = 0, len = data.runtime.length; i < len; i++) {
+        var d = data.runtime[i];
+        if (d.pid) {
+          return true;
         }
+      }
 
-        throw new Error('PID ' + pid + ' never sent any data to the agent.');
-      });
+      throw new Error('PID ' + pid + ' never sent any data to the agent.');
+    });
   });
 };
-
 
 exports.simulateDiscovery = function(pid) {
   return request({
@@ -149,7 +149,6 @@ exports.simulateDiscovery = function(pid) {
   });
 };
 
-
 exports.addEntityData = function(pid, data) {
   return request({
     method: 'POST',
@@ -158,7 +157,6 @@ exports.addEntityData = function(pid, data) {
     body: data
   });
 };
-
 
 exports.addRequestForPid = function(pid, r) {
   return request({

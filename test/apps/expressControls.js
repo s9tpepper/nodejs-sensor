@@ -10,7 +10,7 @@ var path = require('path');
 var utils = require('../utils');
 var config = require('../config');
 var agentPort = require('./agentStubControls').agentPort;
-var appPort = exports.appPort = 3211;
+var appPort = (exports.appPort = 3211);
 
 var expressApp;
 
@@ -38,7 +38,6 @@ exports.registerTestHooks = function(opts) {
   });
 };
 
-
 function waitUntilServerIsUp(useHttps) {
   return utils.retry(function() {
     return request({
@@ -52,7 +51,6 @@ function waitUntilServerIsUp(useHttps) {
   });
 }
 
-
 exports.getPid = function() {
   return expressApp.pid;
 };
@@ -62,13 +60,14 @@ exports.sendBasicRequest = function(opts) {
     method: opts.method,
     url: getBaseUrl(opts.useHttps) + opts.path,
     resolveWithFullResponse: opts.resolveWithFullResponse,
-      strictSSL: false
+    strictSSL: false
   });
 };
 
 exports.sendRequest = function(opts) {
   opts.responseStatus = opts.responseStatus || 200;
   opts.delay = opts.delay || 0;
+  opts.headers = opts.headers || {};
   return request({
     method: opts.method,
     url: getBaseUrl(opts.useHttps) + opts.path,
@@ -79,10 +78,10 @@ exports.sendRequest = function(opts) {
       serverTiming: opts.serverTiming,
       serverTimingArray: opts.serverTimingArray
     },
+    headers: opts.headers,
     resolveWithFullResponse: opts.resolveWithFullResponse,
-      strictSSL: false
-  })
-  .catch(errors.StatusCodeError, function(reason) {
+    strictSSL: false
+  }).catch(errors.StatusCodeError, function(reason) {
     if (reason.statusCode === opts.responseStatus) {
       return true;
     }
@@ -107,5 +106,5 @@ exports.setUnhealthy = function(useHttps) {
 };
 
 function getBaseUrl(useHttps) {
- return 'http' + (useHttps ? 's' : '') + '://127.0.0.1:' + appPort;
+  return 'http' + (useHttps ? 's' : '') + '://127.0.0.1:' + appPort;
 }

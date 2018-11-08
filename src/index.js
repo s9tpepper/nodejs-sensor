@@ -15,16 +15,18 @@ module.exports = exports = function start(config) {
   require('./agent/opts').init(config);
   require('./actions/profiling/cpu').init(config);
   require('./tracing').init(config);
+  require('./util/uncaughtExceptionHandler').init(config);
   require('./states/agentready').init(config);
 
   var logger = log.getLogger('index');
 
   var currentState = null;
 
-  var states = fs.readdirSync(path.join(__dirname, 'states'))
-    // ignore tests
+  var states = fs
+    .readdirSync(path.join(__dirname, 'states'))
+    // ignore non-JS files
     .filter(function(moduleName) {
-      return moduleName.indexOf('_test.js') === -1;
+      return moduleName.indexOf('.js') === moduleName.length - 3;
     })
     .reduce(function(stateModules, stateModuleName) {
       var stateName = stateModuleName.replace(/\.js$/i, '');

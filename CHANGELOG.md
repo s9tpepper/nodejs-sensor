@@ -1,5 +1,133 @@
 # Changelog
 
+## 1.54.1
+- RabbitMQ/amqplib: Small fix for TLS AMQP Urls (amqps).
+
+## 1.54.0
+- Instrument [Bunyan](https://github.com/trentm/node-bunyan).
+- Pino: Improve tracing for error objects.
+
+## 1.53.0
+- Instrument [Winston](https://github.com/winstonjs/winston).
+- Exclude file system entries that are not directories in dependency analysis, fixes confusing warning.
+
+## 1.52.0
+- Instrument [Pino](http://getpino.io/).
+- Allow other (non-Bunyan) loggers to be injected ([#88](https://github.com/instana/nodejs-sensor/pull/88), thanks to @SerayaEryn).
+
+## 1.51.0
+- Instrument amqplib (RabbitMQ tracing).
+
+## 1.50.1
+- Fix: Do not attach context to error/exception objects (#90).
+
+## 1.50.0
+- Update to latest emitter-listener package to include [latest fix](https://github.com/othiym23/emitter-listener/pull/6).
+- Update a number of dependencies (bunyan, event-loop-lag, opentracing, shimmer, ...).
+- Fix minor issues reported by npm audit.
+
+## 1.49.1
+- Fix: Do not fail when http client options object has a headers attribute with value.
+
+## 1.49.0
+- Enable CPU profiling for Node.js 10 apps.
+- Warn about missing dependency netlinkwrapper at startup when reporting of uncaught exceptions is enabled.
+- Fix: Uncaught exception reporting can now be enabled on systems using musl libc instead of glibc (e.g. Alpine Linux).
+
+## 1.48.1
+- Fix secret scrubbing for HTTP server instrumentation.
+
+## 1.48.0
+- Various fixes and improvements for the HTTP client instrumentation:
+    - support for http(s).request(url, options, callback) API introduced in Node.js 10.9.0,
+    - support for WHATWG URL objects,
+    - fix for requests with header "Expect: 100-continue", and
+    - instrument http.get and https.get separately from http(s).request.
+
+## 1.47.1
+ - MySQL: Fix for MySQL instrumentation sometimes losing the tracing context.
+
+## 1.47.0
+ - Add MSSQL (Microsoft SQL Server) instrumentation (supports [mssql](https://www.npmjs.com/package/mssql), version >= 4 via [tedious driver](https://www.npmjs.com/package/tedious)).
+ - Tracing support for [mongodb](https://www.npmjs.com/package/mongodb) version >= 3.0.6.
+
+## 1.46.0
+ - Support a wider range of command names for identification of PID in parent PID namespace.
+ - Report uncaught exceptions as incidents and via span/trace (disabled by default).
+
+## 1.45.0
+ - Record `https` client calls.
+
+## 1.44.2
+ - Fix result handling in PostgreSQL instrumentation.
+
+## 1.44.1
+ - Do not break when modules use `stealthy-require` or similar mechanisms.
+
+## 1.44.0
+ - Record fastify path templates when tracing HTTP entries.
+
+## 1.43.0
+ - Record express.js path templates when tracing HTTP entries.
+
+## 1.42.0
+ - Expose a debugging action to learn about loaded modules.
+ - Allow retrieval of `package.json` files.
+
+## 1.41.0
+ - Add PostgreSQL instrumentation ([pg](https://www.npmjs.com/package/pg)).
+
+## 1.40.2
+ - Avoid sending batch size 0 for Redis multi commands.
+
+## 1.40.1
+ - Only try to instrument bluebird if it is actually available.
+
+## 1.40.0
+ - Include additional debugging data in log when data transmission to agent fails.
+ - Support recording of user-configurable HTTP headers in HTTP client and server instrumentation.
+
+## 1.39.0
+ - Include reporting PID in agent logs.
+
+## 1.38.3
+ - Protect spans from accidental retransmission.
+ - Abort HTTP requests to the agent on timeouts.
+ - HTTP client instrumentation does not correctly interpret HTTP client timeouts.
+
+## 1.38.2
+ - ioredis: Correctly manage tracing context in ioredis instrumentation.
+
+## 1.38.1
+ - OpenTracing baggage is not defined on span context when using `getCurrentlyActiveInstanaSpanContext`.
+
+## 1.38.0
+ - Enable tracing in Node.js `^10.0.0`.
+ - Regression in MongoDB instrumentation which attempts to access optional `operationId` properties.
+
+## 1.37.3
+ - Prepare support for 128bit trace IDs.
+ - Reduce memory footprint when using HTTP agents with `maxSockets: Infinity`.
+
+## 1.37.2
+ - MongoDB: Properly initialize and assure operationId is generated.
+
+## 1.37.1
+ - ioRedis instrumentation can lead to errors when async correlation doesn't work as expected.
+ - Add tracing support for mysql2/promise.
+ - Switch to `@risingstack/v8-profiler` due to security issues in transitive dependencies of `v8-profiler`.
+
+## 1.37.0
+ - Enable tracing in Node.js `^9.1.0`.
+
+## 1.36.1
+ - Reduce severity in log messages which describe dependency analysis failures.
+ - Upgrade `event-loop-lag` to address [security vulnerability](https://nodesecurity.io/advisories/534) in `debug`.
+
+## 1.36.0
+ - Fix support for mysql2 versions prior to 1.5.0.
+ - Read env vars by default to determine agent connection config.
+
 ## 1.35.1
  - HTTPS exit spans can have the wrong protocol set.
 
