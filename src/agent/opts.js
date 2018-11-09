@@ -37,4 +37,29 @@ exports.init = function init(config) {
   }
 
   exports.isSecret = require('../secrets').defaultMatcher;
+
+  exports.senecaRequestBody = function () {
+    return config.senecaRequestBody || false;
+  };
+
+  exports.senecaMaxSize = function () {
+    return config.senecaMaxSize || 4000
+  };
+
+  exports.senecaClean = function (body) {
+    var clean = body;
+    if (typeof config.senecaClean === 'function') {
+      clean = config.senecaClean(body);
+    }
+
+    if (typeof clean !== 'string') {
+      try {
+        clean = JSON.stringify(clean)
+      } catch (e) {
+        clean = body;
+      }
+    }
+
+    return clean;
+  }
 };

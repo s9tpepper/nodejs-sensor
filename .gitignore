@@ -3,3 +3,4 @@ node_modules
 npm-debug*
 load-test/jmeter/result
 load-test/jmeter/jmeter.log
+.idea

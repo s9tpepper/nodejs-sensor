@@ -11,6 +11,7 @@ var shimmer = require('shimmer');
 var cls = require('../../cls');
 
 var isActive = false;
+var MAX_ALLOWED_BODY_SIZE = 4000;
 
 exports.spanName = 'node.http.server';
 
@@ -83,7 +84,33 @@ function shimEmit(realEmit) {
         span.error = res.statusCode >= 500;
         span.ec = span.error ? 1 : 0;
         span.d = Date.now() - span.ts;
-        span.transmit();
+
+        // framework support
+        if (Object.keys(req.headers).indexOf('seneca-id') > -1) { // seneca.js
+          if (agentOpts.senecaRequestBody() && req.headers['seneca-kind'] === 'req') {
+            var body = '';
+
+            // collect request body data
+            req.on('data', function (chunk) {
+              body += chunk;
+            });
+
+            req.on('end', function () {
+              // clean up request body
+              body = agentOpts.senecaClean(body);
+
+              // apply a max size for body string
+              var maxSize = Math.min(agentOpts.senecaMaxSize(), MAX_ALLOWED_BODY_SIZE);
+              body = body.substring(0, maxSize);
+
+              // add body to span data on the message property
+              span.data.http.message = body;
+              span.transmit();
+            });
+          }
+        } else {
+          span.transmit();
+        }
       });
 
       cls.ns.bindEmitter(req);
